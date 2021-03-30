@@ -1,0 +1,81 @@
+############## Mariadb Installation Steps #####################
+
+Step 1. install Mysql
+
+	sudo apt install mysql-server unixodbc unixodbc-dev
+
+Step 2. start mariadb service
+
+	systemctl enable --now mariadb
+
+Step 3. Set root password 
+
+	mysql_secure_installation
+
+Step 4. Create database freeswitch 
+
+	login mysql;
+		mysql -u root -p<your password>
+
+	create database;
+		create database freeswitch;
+
+Step 5: install mysql odbc connector.
+	
+	sudo wget https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.23-linux-glibc2.12-x86-64bit.tar.gz
+
+	sudo tar zxvf mysql-connector-odbc-8.0.23-linux-glibc2.12-x86-64bit.tar.gz 
+ 
+	cd mysql-connector-odbc-8.0.23-linux-glibc2.12-x86-64bit/
+
+	sudo cp bin/* /usr/local/bin
+
+	sudo cp lib/* /usr/local/lib
+
+	// Registers the Unicode driver:
+	sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
+
+	// Registers the ANSI driver 
+	sudo myodbc-installer -a -d -n "MySQL ODBC 8.0" -t "Driver=/usr/local/lib/libmyodbc8a.so"
+
+Step 6. Create ODBC connection
+
+	vim /etc/odbc.ini
+
+	[mysql]
+	Description     = Data source MySQL
+	Driver          = MySQL ODBC 8.0 Driver
+	Server          = x.x.x.x
+	Host            = x.x.x.x
+	Database        = freeswitch
+	Port            = 3306
+	User            = user1 ---- database user name
+	Password        = 123456 ---- database user password.
+
+
+	Save file then check odbc connection 
+
+		isql mysql
+
+	After connect run query to check status;
+
+		SQL> show databases;
+
+	Thank You!
+
+
+Step 6. creating connection between freeswitch and mysql.
+
+	
+	1. recompile freeswitch again by using  below command
+
+		sudo ./configure --enable-core-pgsql-support  --enable-core-odbc-support  && sudo make && sudo make install
+
+	2. add below mention line of code into (/usr/local/freeswitch/conf/autoload_configs/switch.conf.xml) file
+
+		<param name="core-db-dsn" value="mysql::"/>
+
+	3. restart freeswitch 
+
+		sudo service freeswitch restart
+
